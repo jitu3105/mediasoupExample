@@ -1,0 +1,21 @@
+{
+  "type": "module",
+  "name": "server",
+  "scripts": {
+    "dev": "DEBUG='mediasoup*' nodemon index.js",
+    "devClient": "watchify public/index.js -o public/script.js "
+  },
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "mediasoup": "^3.11.8",
+    "mediasoup-client": "^3.6.75",
+    "nodemon": "^2.0.20",
+    "socket.io": "^4.5.4",
+    "socket.io-client": "^4.5.4",
+    "watchify": "^4.0.0"
+  }
+}
