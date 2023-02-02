@@ -40,13 +40,14 @@ const mediaCodecs = [
 
 const router = await worker.createRouter({ mediaCodecs });
 console.log(router);
+let interval;
 const rtpCapabilities = mediasoup.getSupportedRtpCapabilities();
 console.log(rtpCapabilities);
 const producerTransport = await router.createPlainTransport({
-  listenIp: "127.0.0.1",
+  listenIp: "192.168.29.21",
   rtcpMux: false,
   comedia: true,
-  port: 2500,
+  port: 2600,
 });
 const videoRtpPort = producerTransport.tuple.localPort;
 const videoRtcpPort = producerTransport.rtcpTuple.localPort;
@@ -57,7 +58,7 @@ const producer = await producerTransport.produce({
   rtpParameters: {
     codecs: [
       {
-        mimeType: "video/vp8",
+        mimeType: "video/VP8",
         clockRate: 90000,
         payloadType: 102,
         rtcpFeedback: [], // FFmpeg does not support NACK nor PLI/FIR.
@@ -83,7 +84,7 @@ const server = app.listen(3000, () => {
 });
 app.use(cors("*"));
 
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, { cors: { origin: ["192.168.29.21"] } });
 const peer = io.of("/mediasoup");
 let clientRouter;
 let consumer;
@@ -106,7 +107,7 @@ peer.on("connection", async (socket) => {
     // });
 
     clientTransport = await router.createWebRtcTransport({
-      listenIps: [{ ip: "127.0.0.1" }],
+      listenIps: [{ ip: "192.168.29.21" }],
       enableUdp: true,
       enableTcp: true,
       //   preferUdp: true,
@@ -145,6 +146,7 @@ peer.on("connection", async (socket) => {
       rtpCapabilities: rtpCapability,
       paused: true,
     });
+
     consumer.on("transportclose", () => {
       console.log("transport close from consumer");
     });
@@ -163,7 +165,15 @@ peer.on("connection", async (socket) => {
   });
   socket.on("consumer-resume", async () => {
     console.log("consumer resuming");
+    interval = setInterval(async () => {
+      // console.log("****************producer*************");
+      const producerStats = await producer.getStats();
+      console.log(producerStats, "producer");
+      // console.log("****************consumer*************");
+      const consumerStats = await consumer.getStats();
 
+      console.log(consumerStats, "consumer");
+    }, 3000);
     await consumer.resume();
     console.log(await producer.getStats());
     console.log(await consumer.getStats());
@@ -171,6 +181,9 @@ peer.on("connection", async (socket) => {
   socket.on("disconnecting", () => {
     console.log("Byeee");
     console.log(clientTransport.close());
+    if (interval) {
+      clearInterval(interval);
+    }
     // console.log(producerTransport.close());
   });
   //   clientTransport.consume({ producerId: producer.id, rtpCapabilities });

@@ -1,0 +1,1 @@
+gst-launch-1.0 udpsrc port=2600 ! "application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)VP8,pt=(int)102,ssrc=22222222" ! rtpvp8depay ! vp8dec ! videoconvert ! autovideosink 
